@@ -1,0 +1,26 @@
+<h1>Scheduled Emails</h1>
+<table>
+    <thead>
+        <tr>
+            <th>Email</th>
+            <th>Subject</th>
+            <th>Send Date</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for email in emails %}
+        <tr>
+            <td>{{ email.email }}</td>
+            <td>{{ email.subject }}</td>
+            <td>{{ email.send_date }}</td>
+            <td>{{ email.status }}</td>
+            <td>
+                <a href="{% url 'edit_email' email.id %}">Edit</a>
+                <a href="{% url 'delete_email' email.id %}">Cancel</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>

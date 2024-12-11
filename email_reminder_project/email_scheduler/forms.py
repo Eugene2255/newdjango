@@ -24,3 +24,5 @@ class EmailScheduleForm(forms.ModelForm):
         if send_date < timezone.now():
             raise ValidationError("The send date cannot be in the past.")
         return send_date
+
+

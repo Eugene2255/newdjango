@@ -1,0 +1,7 @@
+<h1>Cancel Scheduled Email</h1>
+<p>Are you sure you want to cancel the email to {{ email.email }}?</p>
+<form method="post">
+    {% csrf_token %}
+    <button type="submit">Yes, Cancel</button>
+    <a href="{% url 'email_dashboard' %}">No, Go Back</a>
+</form>

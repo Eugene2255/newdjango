@@ -5,6 +5,8 @@ class EmailSchedule(models.Model):
     subject = models.CharField(max_length=255)
     message = models.TextField()
     send_date = models.DateTimeField()
+    status = models.CharField(max_length=10, default='unsent')  # 'unsent', 'sent'
 
     def __str__(self):
         return f"{self.subject} to {self.email}"
+
