@@ -1,3 +1,10 @@
+{% extends 'base.html' %}
+
+{% block title %}Cancel Scheduled Email{% endblock %}
+
+{% block content %}
+
+
 <h1>Cancel Scheduled Email</h1>
 <p>Are you sure you want to cancel the email to {{ email.email }}?</p>
 <form method="post">
@@ -5,3 +12,4 @@
     <button type="submit">Yes, Cancel</button>
     <a href="{% url 'email_dashboard' %}">No, Go Back</a>
 </form>
+{% endblock %}

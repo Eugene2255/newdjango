@@ -1,5 +1,10 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
 <h1>Scheduled Emails</h1>
-<table>
+<table class="table">
     <thead>
         <tr>
             <th>Email</th>
@@ -17,10 +22,18 @@
             <td>{{ email.send_date }}</td>
             <td>{{ email.status }}</td>
             <td>
-                <a href="{% url 'edit_email' email.id %}">Edit</a>
-                <a href="{% url 'delete_email' email.id %}">Cancel</a>
+                {% if email.status == 'unsent' %}
+                    <a class="btn btn-primary btn-sm" href="{% url 'edit_email' email.id %}">Edit</a>
+                    <a class="btn btn-danger btn-sm" href="{% url 'delete_email' email.id %}">Cancel</a>
+                {% elif email.status == 'sent' %}
+                    <span class="text-muted">No actions available</span>
+                {% elif email.status == 'canceled' %}
+                    <span class="text-muted">Canceled</span>
+                {% endif %}
             </td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
+{% endblock %}
+

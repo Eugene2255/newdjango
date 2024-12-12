@@ -1,6 +1,12 @@
+{% extends 'base.html' %}
+
+{% block title %}Schedule Email{% endblock %}
+
+{% block content %}
 <h1>Schedule an Email Reminder</h1>
-<form method="post">
+<form method="post" class="form">
     {% csrf_token %}
     {{ form.as_p }}
-    <button type="submit">Schedule Email</button>
+    <button type="submit" class="btn btn-success">Schedule Email</button>
 </form>
+{% endblock %}
