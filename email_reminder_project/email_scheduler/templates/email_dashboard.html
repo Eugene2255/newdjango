@@ -4,13 +4,78 @@
 
 {% block content %}
 <h1>Scheduled Emails</h1>
+
+<!-- Filters -->
+<form method="get" class="mb-3 row">
+    <div class="col-md-3">
+        <select name="status" class="form-control">
+            <option value="">Status</option>
+            <option value="Pending" {% if status == 'Pending' %}selected{% endif %}>Pending</option>
+            <option value="Sent" {% if status == 'Sent' %}selected{% endif %}>Sent</option>
+            <option value="Failed" {% if status == 'Failed' %}selected{% endif %}>Failed</option>
+            <option value="Canceled" {% if status == 'Canceled' %}selected{% endif %}>Canceled</option>
+
+        </select>
+    </div>
+    <div class="col-md-3">
+        <input type="date" name="start_date" class="form-control" value="{{ start_date }}" placeholder="Start Date">
+    </div>
+    <div class="col-md-3">
+        <input type="date" name="end_date" class="form-control" value="{{ end_date }}" placeholder="End Date">
+    </div>
+    <div class="col-md-3">
+        <button type="submit" class="btn btn-primary">Apply Filters</button>
+    </div>
+</form>
+
+<!-- Emails Table -->
 <table class="table">
     <thead>
         <tr>
-            <th>Email</th>
-            <th>Subject</th>
-            <th>Send Date</th>
-            <th>Status</th>
+            <th>
+                <a href="?status={{ status }}&start_date={{ start_date }}&end_date={{ end_date }}&sort_by=email&sort_order={% if sort_by == 'email' and sort_order == 'asc' %}desc{% else %}asc{% endif %}"
+                   class="{% if sort_by == 'email' %}text-primary{% endif %}">
+                    Email
+                    {% if sort_by == 'email' %}
+                        <i class="bi bi-sort-{% if sort_order == 'asc' %}up{% else %}down{% endif %}"></i>
+                    {% else %}
+                        <i class="bi bi-sort"></i>
+                    {% endif %}
+                </a>
+            </th>
+            <th>
+                <a href="?status={{ status }}&start_date={{ start_date }}&end_date={{ end_date }}&sort_by=subject&sort_order={% if sort_by == 'subject' and sort_order == 'asc' %}desc{% else %}asc{% endif %}"
+                   class="{% if sort_by == 'subject' %}text-primary{% endif %}">
+                    Subject
+                    {% if sort_by == 'subject' %}
+                        <i class="bi bi-sort-{% if sort_order == 'asc' %}up{% else %}down{% endif %}"></i>
+                    {% else %}
+                        <i class="bi bi-sort"></i>
+                    {% endif %}
+                </a>
+            </th>
+            <th>
+                <a href="?status={{ status }}&start_date={{ start_date }}&end_date={{ end_date }}&sort_by=send_date&sort_order={% if sort_by == 'send_date' and sort_order == 'asc' %}desc{% else %}asc{% endif %}"
+                   class="{% if sort_by == 'send_date' %}text-primary{% endif %}">
+                    Send Date
+                    {% if sort_by == 'send_date' %}
+                        <i class="bi bi-sort-{% if sort_order == 'asc' %}up{% else %}down{% endif %}"></i>
+                    {% else %}
+                        <i class="bi bi-sort"></i>
+                    {% endif %}
+                </a>
+            </th>
+            <th>
+                <a href="?status={{ status }}&start_date={{ start_date }}&end_date={{ end_date }}&sort_by=status&sort_order={% if sort_by == 'status' and sort_order == 'asc' %}desc{% else %}asc{% endif %}"
+                   class="{% if sort_by == 'status' %}text-primary{% endif %}">
+                    Status
+                    {% if sort_by == 'status' %}
+                        <i class="bi bi-sort-{% if sort_order == 'asc' %}up{% else %}down{% endif %}"></i>
+                    {% else %}
+                        <i class="bi bi-sort"></i>
+                    {% endif %}
+                </a>
+            </th>
             <th>Actions</th>
         </tr>
     </thead>
@@ -20,20 +85,115 @@
             <td>{{ email.email }}</td>
             <td>{{ email.subject }}</td>
             <td>{{ email.send_date }}</td>
-            <td>{{ email.status }}</td>
+            <td id="email-status-{{ email.id }}">{{ email.status }}</td>
             <td>
-                {% if email.status == 'unsent' %}
-                    <a class="btn btn-primary btn-sm" href="{% url 'edit_email' email.id %}">Edit</a>
-                    <a class="btn btn-danger btn-sm" href="{% url 'delete_email' email.id %}">Cancel</a>
-                {% elif email.status == 'sent' %}
-                    <span class="text-muted">No actions available</span>
-                {% elif email.status == 'canceled' %}
-                    <span class="text-muted">Canceled</span>
+                <button class="btn btn-info btn-sm preview-email-btn" data-bs-toggle="modal" data-bs-target="#previewModal" data-email-id="{{ email.id }}">
+                    Preview
+                </button>
+                {% if email.status == 'Pending' %}
+                <a class="btn btn-primary btn-sm" id="edit-button-{{ email.id }}" href="{% url 'edit_email' email.id %}">Edit</a>
+                <a class="btn btn-danger btn-sm" id="cancel-button-{{ email.id }}" href="{% url 'delete_email' email.id %}">Cancel</a>
                 {% endif %}
             </td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
+
+
+<!-- Preview Modal -->
+<div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="previewModalLabel">Email Preview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h5 id="email-subject">Subject: Loading...</h5>
+                <p id="email-message">Message: Loading...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const previewButtons = document.querySelectorAll('.preview-email-btn');
+
+        previewButtons.forEach(button => {
+            button.addEventListener('click', function () {
+                const emailId = this.getAttribute('data-email-id');
+
+                // AJAX call to fetch email preview
+                fetch(`/preview_email/${emailId}/`, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch email preview');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Update modal with email content
+                    document.getElementById('email-subject').textContent = `Subject: ${data.subject}`;
+                    document.getElementById('email-message').textContent = `Message: ${data.message}`;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('email-subject').textContent = 'Error loading subject';
+                    document.getElementById('email-message').textContent = 'Error loading message';
+                });
+            });
+        });
+    });
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        function updateStatuses() {
+            fetch('/fetch_statuses/', {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch statuses');
+                }
+                return response.json();
+            })
+            .then(data => {
+                data.forEach(email => {
+                    const statusCell = document.querySelector(`#email-status-${email.id}`);
+                    const editButton = document.querySelector(`#edit-button-${email.id}`);
+                    const cancelButton = document.querySelector(`#cancel-button-${email.id}`);
+                    
+                    if (statusCell) {
+                        // Update the status text if it has changed
+                        if (statusCell.textContent !== email.status) {
+                            statusCell.textContent = email.status;
+                            // Optional: Highlight updated statuses
+                            statusCell.classList.add('status-updated');
+                            setTimeout(() => statusCell.classList.remove('status-updated'), 2000);
+                        }
+
+                        // Hide buttons if status is "Sent"
+                        if (email.status === 'Sent') {
+                            if (editButton) editButton.style.display = 'none';
+                            if (cancelButton) cancelButton.style.display = 'none';
+                        }
+                    }
+                });
+            })
+            .catch(error => console.error('Error fetching statuses:', error));
+        }
+
+        // Poll every 10 seconds
+        setInterval(updateStatuses, 10000);
+    });
+</script>
+
+
+
 {% endblock %}
 

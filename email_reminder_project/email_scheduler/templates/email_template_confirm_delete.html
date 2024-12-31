@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Are you sure you want to delete this email template?</h1>
+<p><strong>Subject:</strong> {{ template.subject }}</p>
+<p><strong>Message:</strong> {{ template.message }}</p>
+
+<form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">Yes, delete</button>
+    <a href="{% url 'template_list' %}" class="btn btn-secondary">Cancel</a>
+</form>
+{% endblock %}

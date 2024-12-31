@@ -7,6 +7,39 @@
 <form method="post" class="form">
     {% csrf_token %}
     {{ form.as_p }}
+    <a href="{% url 'template_list' %}?next={% url 'schedule_email' %}" class="btn btn-primary">
+        Create Templates
+    </a>
     <button type="submit" class="btn btn-success">Schedule Email</button>
 </form>
+
+<script>
+document.getElementById('id_template').addEventListener('change', function () {
+    const templateId = this.value;  
+    if (templateId) {
+        fetch(`/dynamic_template_preview/${templateId}/`, {  
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch email schedule preview');
+            }
+            return response.json();
+        })
+        .then(data => {
+
+            if (data.subject && data.message) {
+                document.getElementById('id_subject').value = data.subject || '';
+                document.getElementById('id_message').value = data.message || '';
+            }
+        })
+        .catch(error => console.error('Error fetching preview:', error));
+    } else {
+
+        document.getElementById('id_subject').value = '';
+        document.getElementById('id_message').value = '';
+    }
+});
+</script>
+
 {% endblock %}
