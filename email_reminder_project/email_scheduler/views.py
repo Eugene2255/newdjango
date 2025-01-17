@@ -8,6 +8,7 @@ from datetime import timedelta
 from .forms import EmailTemplateForm
 from django.utils import timezone
 import logging
+from django.views.decorators.cache import cache_page
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +37,7 @@ def dynamic_template_preview(request, template_id):
     template = get_object_or_404(EmailTemplate, id=template_id)
     return JsonResponse({'subject': template.subject, 'message': template.message})
 
-
+@cache_page(60 * 10)
 def email_dashboard(request):
     emails = EmailSchedule.objects.all()
 
@@ -149,7 +150,7 @@ def delete_email(request, email_id):
     return render(request, 'confirm_delete.html', {'email': email_schedule})
 
 
-
+@cache_page(60 * 10)
 def template_list(request):
     templates = EmailTemplate.objects.all()
     return render(request, 'template_list.html', {'templates': templates})
@@ -176,7 +177,7 @@ def edit_template(request, template_id):
         form = EmailTemplateForm(instance=template)
     return render(request, 'edit_template.html', {'form': form, 'template': template})
 
-
+@cache_page(60 * 10)
 def preview_email(request, email_id):
     email = get_object_or_404(EmailSchedule, id=email_id)
     return JsonResponse({

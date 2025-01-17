@@ -137,3 +137,15 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'bruce847wayne@gmail.com' 
 EMAIL_HOST_PASSWORD = 'slpu eeee rkyh cncj' 
+
+# Redis Caching Configuration
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'LOCATION': 'redis://127.0.0.1:6379/1',  # Use a different Redis DB index for caching
+    }
+}
+
+# Session Engine to Use Cache
+SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+SESSION_CACHE_ALIAS = 'default'
