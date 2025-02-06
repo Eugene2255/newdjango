@@ -4,7 +4,7 @@ from . import views
 
 urlpatterns = [
     path('', views.email_dashboard, name='email_dashboard'),
-    path('schedule/', schedule_email, name='schedule_email'),
+    path('schedule/', views.schedule_email, name='schedule_email'),
     path('edit/<int:email_id>/', views.edit_email, name='edit_email'),
     path('delete/<int:email_id>/', views.delete_email, name='delete_email'),
     path('preview_email/<int:email_id>/', views.preview_email, name='preview_email'),
@@ -14,6 +14,5 @@ urlpatterns = [
     path('templates/edit/<int:template_id>/', views.edit_template, name='edit_template'),
     path('delete_template/<int:template_id>/', delete_email_template, name='delete_email_template'),
     path('fetch_statuses/', views.fetch_email_statuses, name='fetch_statuses'),
-
 ]
 

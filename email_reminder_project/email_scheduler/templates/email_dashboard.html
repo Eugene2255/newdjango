@@ -5,6 +5,11 @@
 {% block content %}
 <h1>Scheduled Emails</h1>
 
+<!-- Add total count display -->
+<div class="alert alert-info">
+    Total emails: {{ total_emails }}
+</div>
+
 <!-- Filters -->
 <form method="get" class="mb-3 row">
     <div class="col-md-3">
@@ -14,7 +19,6 @@
             <option value="Sent" {% if status == 'Sent' %}selected{% endif %}>Sent</option>
             <option value="Failed" {% if status == 'Failed' %}selected{% endif %}>Failed</option>
             <option value="Canceled" {% if status == 'Canceled' %}selected{% endif %}>Canceled</option>
-
         </select>
     </div>
     <div class="col-md-3">
@@ -28,78 +32,156 @@
     </div>
 </form>
 
-<!-- Emails Table -->
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                <a href="?status={{ status }}&start_date={{ start_date }}&end_date={{ end_date }}&sort_by=email&sort_order={% if sort_by == 'email' and sort_order == 'asc' %}desc{% else %}asc{% endif %}"
-                   class="{% if sort_by == 'email' %}text-primary{% endif %}">
-                    Email
-                    {% if sort_by == 'email' %}
-                        <i class="bi bi-sort-{% if sort_order == 'asc' %}up{% else %}down{% endif %}"></i>
-                    {% else %}
-                        <i class="bi bi-sort"></i>
-                    {% endif %}
-                </a>
-            </th>
-            <th>
-                <a href="?status={{ status }}&start_date={{ start_date }}&end_date={{ end_date }}&sort_by=subject&sort_order={% if sort_by == 'subject' and sort_order == 'asc' %}desc{% else %}asc{% endif %}"
-                   class="{% if sort_by == 'subject' %}text-primary{% endif %}">
-                    Subject
-                    {% if sort_by == 'subject' %}
-                        <i class="bi bi-sort-{% if sort_order == 'asc' %}up{% else %}down{% endif %}"></i>
-                    {% else %}
-                        <i class="bi bi-sort"></i>
-                    {% endif %}
-                </a>
-            </th>
-            <th>
-                <a href="?status={{ status }}&start_date={{ start_date }}&end_date={{ end_date }}&sort_by=send_date&sort_order={% if sort_by == 'send_date' and sort_order == 'asc' %}desc{% else %}asc{% endif %}"
-                   class="{% if sort_by == 'send_date' %}text-primary{% endif %}">
-                    Send Date
-                    {% if sort_by == 'send_date' %}
-                        <i class="bi bi-sort-{% if sort_order == 'asc' %}up{% else %}down{% endif %}"></i>
-                    {% else %}
-                        <i class="bi bi-sort"></i>
-                    {% endif %}
-                </a>
-            </th>
-            <th>
-                <a href="?status={{ status }}&start_date={{ start_date }}&end_date={{ end_date }}&sort_by=status&sort_order={% if sort_by == 'status' and sort_order == 'asc' %}desc{% else %}asc{% endif %}"
-                   class="{% if sort_by == 'status' %}text-primary{% endif %}">
-                    Status
-                    {% if sort_by == 'status' %}
-                        <i class="bi bi-sort-{% if sort_order == 'asc' %}up{% else %}down{% endif %}"></i>
-                    {% else %}
-                        <i class="bi bi-sort"></i>
-                    {% endif %}
-                </a>
-            </th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for email in emails %}
-        <tr>
-            <td>{{ email.email }}</td>
-            <td>{{ email.subject }}</td>
-            <td>{{ email.send_date }}</td>
-            <td id="email-status-{{ email.id }}">{{ email.status }}</td>
-            <td>
-                <button class="btn btn-info btn-sm preview-email-btn" data-bs-toggle="modal" data-bs-target="#previewModal" data-email-id="{{ email.id }}">
-                    Preview
-                </button>
-                {% if email.status == 'Pending' %}
-                <a class="btn btn-primary btn-sm" id="edit-button-{{ email.id }}" href="{% url 'edit_email' email.id %}">Edit</a>
-                <a class="btn btn-danger btn-sm" id="cancel-button-{{ email.id }}" href="{% url 'delete_email' email.id %}">Cancel</a>
-                {% endif %}
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<!-- Add empty state message -->
+{% if not page_obj.object_list %}
+<div class="alert alert-warning">
+    No emails found matching your criteria.
+</div>
+{% endif %}
 
+<!-- Debug info for development -->
+<div class="alert alert-info">
+    <p>Total emails: {{ total_emails }}</p>
+    <p>Current page: {{ page_obj.number }}</p>
+    <p>Total pages: {{ page_obj.paginator.num_pages }}</p>
+    <p>Items on current page: {{ page_obj|length }}</p>
+</div>
+
+<!-- Show table only if we have emails -->
+{% if total_emails > 0 %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>
+                    <a href="?status={{ status }}&start_date={{ start_date }}&end_date={{ end_date }}&sort_by=email&sort_order={% if sort_by == 'email' and sort_order == 'asc' %}desc{% else %}asc{% endif %}"
+                       class="{% if sort_by == 'email' %}text-primary{% endif %}">
+                        Email
+                        {% if sort_by == 'email' %}
+                            <i class="bi bi-sort-{% if sort_order == 'asc' %}up{% else %}down{% endif %}"></i>
+                        {% else %}
+                            <i class="bi bi-sort"></i>
+                        {% endif %}
+                    </a>
+                </th>
+                <th>
+                    <a href="?status={{ status }}&start_date={{ start_date }}&end_date={{ end_date }}&sort_by=subject&sort_order={% if sort_by == 'subject' and sort_order == 'asc' %}desc{% else %}asc{% endif %}"
+                       class="{% if sort_by == 'subject' %}text-primary{% endif %}">
+                        Subject
+                        {% if sort_by == 'subject' %}
+                            <i class="bi bi-sort-{% if sort_order == 'asc' %}up{% else %}down{% endif %}"></i>
+                        {% else %}
+                            <i class="bi bi-sort"></i>
+                        {% endif %}
+                    </a>
+                </th>
+                <th>
+                    <a href="?status={{ status }}&start_date={{ start_date }}&end_date={{ end_date }}&sort_by=send_date&sort_order={% if sort_by == 'send_date' and sort_order == 'asc' %}desc{% else %}asc{% endif %}"
+                       class="{% if sort_by == 'send_date' %}text-primary{% endif %}">
+                        Send Date
+                        {% if sort_by == 'send_date' %}
+                            <i class="bi bi-sort-{% if sort_order == 'asc' %}up{% else %}down{% endif %}"></i>
+                        {% else %}
+                            <i class="bi bi-sort"></i>
+                        {% endif %}
+                    </a>
+                </th>
+                <th>
+                    <a href="?status={{ status }}&start_date={{ start_date }}&end_date={{ end_date }}&sort_by=status&sort_order={% if sort_by == 'status' and sort_order == 'asc' %}desc{% else %}asc{% endif %}"
+                       class="{% if sort_by == 'status' %}text-primary{% endif %}">
+                        Status
+                        {% if sort_by == 'status' %}
+                            <i class="bi bi-sort-{% if sort_order == 'asc' %}up{% else %}down{% endif %}"></i>
+                        {% else %}
+                            <i class="bi bi-sort"></i>
+                        {% endif %}
+                    </a>
+                </th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for email in page_obj %}
+            <tr>
+                <td>{{ email.email }}</td>
+                <td>{{ email.subject }}</td>
+                <td>{{ email.send_date }}</td>
+                <td id="email-status-{{ email.id }}">{{ email.status }}</td>
+                <td>
+                    <button class="btn btn-info btn-sm preview-email-btn" data-bs-toggle="modal" data-bs-target="#previewModal" data-email-id="{{ email.id }}">
+                        Preview
+                    </button>
+                    {% if email.status == 'Pending' %}
+                    <a class="btn btn-primary btn-sm" id="edit-button-{{ email.id }}" href="{% url 'edit_email' email.id %}">Edit</a>
+                    <a class="btn btn-danger btn-sm" id="cancel-button-{{ email.id }}" href="{% url 'delete_email' email.id %}">Cancel</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <!-- Pagination -->
+    {% if page_obj.paginator.num_pages > 1 %}
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center">
+                <!-- First page -->
+                <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+                    <a class="page-link" href="?page=1&status={{ status }}&start_date={{ start_date }}&end_date={{ end_date }}&sort_by={{ sort_by }}&sort_order={{ sort_order }}">First</a>
+                </li>
+                
+                <!-- Previous page -->
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}&status={{ status }}&start_date={{ start_date }}&end_date={{ end_date }}&sort_by={{ sort_by }}&sort_order={{ sort_order }}">Previous</a>
+                    </li>
+                {% endif %}
+
+                <!-- Page numbers -->
+                {% for num in page_obj.paginator.page_range %}
+                    {% if num == page_obj.number %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}&status={{ status }}&start_date={{ start_date }}&end_date={{ end_date }}&sort_by={{ sort_by }}&sort_order={{ sort_order }}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                <!-- Next page -->
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}&status={{ status }}&start_date={{ start_date }}&end_date={{ end_date }}&sort_by={{ sort_by }}&sort_order={{ sort_order }}">Next</a>
+                    </li>
+                {% endif %}
+
+                <!-- Last page -->
+                <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&status={{ status }}&start_date={{ start_date }}&end_date={{ end_date }}&sort_by={{ sort_by }}&sort_order={{ sort_order }}">Last</a>
+                </li>
+            </ul>
+        </nav>
+    {% endif %}
+{% else %}
+    <div class="alert alert-warning">
+        No emails found matching your criteria.
+    </div>
+{% endif %}
+
+<style>
+.pagination {
+    justify-content: center;
+    margin-top: 20px;
+}
+.pagination .page-link {
+    padding: 0.5rem 0.75rem;
+}
+.status-updated {
+    transition: background-color 0.5s;
+    background-color: #e8f5e9;
+}
+</style>
 
 <!-- Preview Modal -->
 <div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
@@ -148,9 +230,7 @@
             });
         });
     });
-</script>
 
-<script>
     document.addEventListener('DOMContentLoaded', function () {
         function updateStatuses() {
             fetch('/fetch_statuses/', {
@@ -177,8 +257,8 @@
                             setTimeout(() => statusCell.classList.remove('status-updated'), 2000);
                         }
 
-                        // Hide buttons if status is "Sent"
-                        if (email.status === 'Sent') {
+                        // Hide buttons if status is "Sent" or "Canceled"
+                        if (email.status === 'Sent' || email.status === 'Canceled') {
                             if (editButton) editButton.style.display = 'none';
                             if (cancelButton) cancelButton.style.display = 'none';
                         }

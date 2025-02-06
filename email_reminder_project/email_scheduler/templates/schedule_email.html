@@ -3,43 +3,44 @@
 {% block title %}Schedule Email{% endblock %}
 
 {% block content %}
-<h1>Schedule an Email Reminder</h1>
-<form method="post" class="form">
+<h1>Schedule Email</h1>
+<form method="post">
     {% csrf_token %}
     {{ form.as_p }}
-    <a href="{% url 'template_list' %}?next={% url 'schedule_email' %}" class="btn btn-primary">
-        Create Templates
-    </a>
-    <button type="submit" class="btn btn-success">Schedule Email</button>
+    <button type="submit" class="btn btn-primary">Schedule</button>
 </form>
+<a href="{% url 'create_template' %}">Create a New Template</a>
 
-<script>
-document.getElementById('id_template').addEventListener('change', function () {
-    const templateId = this.value;  
-    if (templateId) {
-        fetch(`/dynamic_template_preview/${templateId}/`, {  
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Failed to fetch email schedule preview');
+<script type="text/javascript">
+    document.addEventListener("DOMContentLoaded", function() {
+        const templateSelect = document.querySelector("select[name='template']");
+        const subjectField = document.querySelector("input[name='subject']");
+        const messageField = document.querySelector("textarea[name='message']");
+
+        // Listen for changes in the template dropdown
+        templateSelect.addEventListener("change", function() {
+            const templateId = templateSelect.value;
+
+            // If no template is selected, clear the fields
+            if (!templateId) {
+                subjectField.value = '';
+                messageField.value = '';
+                return;
             }
-            return response.json();
-        })
-        .then(data => {
 
-            if (data.subject && data.message) {
-                document.getElementById('id_subject').value = data.subject || '';
-                document.getElementById('id_message').value = data.message || '';
-            }
-        })
-        .catch(error => console.error('Error fetching preview:', error));
-    } else {
-
-        document.getElementById('id_subject').value = '';
-        document.getElementById('id_message').value = '';
-    }
-});
+            // Make an AJAX request to fetch the template's subject and message
+            fetch(`/dynamic_template_preview/${templateId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    subjectField.value = data.subject;
+                    messageField.value = data.message;
+                })
+                .catch(error => {
+                    console.error("Error fetching template:", error);
+                });
+        });
+    });
 </script>
+
 
 {% endblock %}
